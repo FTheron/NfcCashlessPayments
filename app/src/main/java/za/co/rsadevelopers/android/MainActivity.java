@@ -60,7 +60,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static final String PAYMENT_AMOUNT = "za.co.rsadevelopers.android.MESSAGE";
     private void Pay() {
-
+        Intent intent = new Intent(this, PaymentActivity.class);
+        EditText editText = (EditText) findViewById(R.id.price_edit_text);
+        String message = editText.getText().toString();
+        intent.putExtra(PAYMENT_AMOUNT, message);
+        startActivity(intent);
     }
 }
