@@ -15,7 +15,8 @@
     <ScrollView
         android:id="@+id/main_activity_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/payment_form"
@@ -24,31 +25,33 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/amountLabel"
-                android:layout_width="wrap_content"
+                android:id="@+id/logged_in_as"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/amount_text"/>
+                android:text="@string/singed_in_as"/>
 
             <EditText
                 android:id="@+id/price_edit_text"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName"
+                android:inputType="phone"
                 android:hint="@string/amount" />
 
             <Button
                 android:id="@+id/pay_button"
-                android:layout_width="wrap_content"
+                style="?android:textAppearanceSmall"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/pay" />
+                android:text="@string/pay"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/logged_in_as"
-                android:layout_width="wrap_content"
+                android:id="@+id/error_message"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/singed_in_as"/>
+                android:textAlignment="center"
+                android:textColor="@color/colorError"/>
         </LinearLayout>
     </ScrollView>
-
 </android.support.constraint.ConstraintLayout>
