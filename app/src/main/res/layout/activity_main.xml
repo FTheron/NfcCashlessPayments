@@ -47,11 +47,11 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/error_message"
+                android:id="@+id/nfc_status"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="center"
-                android:textColor="@color/colorError"/>
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="10pt"/>
         </LinearLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>

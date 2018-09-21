@@ -24,36 +24,27 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/nfc_status"
+            <ImageView
+                android:id="@+id/nfc_payment_status_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
-                android:textSize="10pt"
-                android:text="@string/waiting_for_nfc_tag"/>
+                android:gravity="center" />
 
             <TextView
-                android:id="@+id/payment_amount"
+                android:id="@+id/nfc_status_message"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:textSize="8pt"/>
 
             <Button
-                android:id="@+id/cancel_payment_button"
+                android:id="@+id/back_button"
                 style="?android:textAppearanceSmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/cancel_payment"
+                android:text="@string/return_home"
                 android:layout_marginTop="16dp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/error_message"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="center"
-                android:textColor="@color/colorError"/>
         </LinearLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>

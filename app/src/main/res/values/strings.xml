@@ -17,4 +17,5 @@
     <string name="singed_in_as">none</string>
     <string name="cancel_payment">Cancel Payment</string>
     <string name="waiting_for_nfc_tag">Waiting for NFC tag</string>
+    <string name="return_home">Return</string>
 </resources>
