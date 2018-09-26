@@ -14,7 +14,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
     Button payButton;
     EditText priceEditText;
-    TextView nfcStatusView;
+    TextView activityMessage;
     SharedPreferences sharedPreferences;
 
     @Override
@@ -35,28 +35,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        nfcStatusView = (TextView) findViewById(R.id.nfc_status);
+        // Get text view for errors.
+        activityMessage = (TextView) findViewById(R.id.activity_message);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         checkLogin();
-        resetActivity();
-    }
-
-    private void resetActivity(){
-        payButton.setText("Pay");
-        priceEditText.setText("");
-        nfcStatusView.setText("");
-        SharedPreferences.Editor prefs = sharedPreferences.edit();
-        prefs.putString("Payment_Amount","");
-        prefs.apply();
     }
 
     private void checkLogin() {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Long user_id = sharedPreferences.getLong("User_Id", 0);
         String email = sharedPreferences.getString("User_Email", "none");
         if (user_id == 0) {
@@ -70,16 +61,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
     private void clickPayButton() {
-        if (payButton.getText().equals("Pay")){
-            String amount = priceEditText.getText().toString();
-            SharedPreferences.Editor prefs = sharedPreferences.edit();
-            prefs.putString("Payment_Amount",amount);
-            prefs.apply();
-            payButton.setText("Cancel Payment");
-            nfcStatusView.setText("Waiting on NFC tag");
-        }else{
-            resetActivity();
-        }
+        // TODO Check that the amount is valid.
+        Intent intent = new Intent(this, PaymentActivity.class);
+        EditText editText = (EditText) findViewById(R.id.price_edit_text);
+        String amount = editText.getText().toString();
+        intent.putExtra(EXTRA_MESSAGE, amount);
+        startActivity(intent);
     }
 }

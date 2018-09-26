@@ -1,5 +1,6 @@
 package za.co.rsadevelopers.android;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
@@ -23,16 +24,19 @@ import java.nio.charset.Charset;
 
 public class PaymentActivity extends AppCompatActivity {
     public static final String ERROR_DETECTED = "No NFC tag detected!";
+    public static final String ERROR_FORMAT = "No NFC tag detected!";
     public static final String WRITE_SUCCESS = "Text written to the NFC tag successfully!";
     public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
+    public static final String READ_WAITING = "Waiting for NFC tag.";
 
     ImageView nfcStatusImage;
     TextView nfcStatusMessage;
+    NfcAdapter mAdapter;
+    PendingIntent mPendingIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_payment);
 
         // Add event for paying.
@@ -45,40 +49,75 @@ public class PaymentActivity extends AppCompatActivity {
         });
 
         nfcStatusImage = (ImageView) findViewById(R.id.nfc_payment_status_image);
-        backButton.setVisibility(View.GONE);
+        nfcStatusImage.setVisibility(View.GONE);
 
         nfcStatusMessage = (TextView) findViewById(R.id.nfc_status_message);
+        nfcStatusMessage.setText(READ_WAITING);
+
+        // initialize the NFC adapter and define Pending Intent.
+        mAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mAdapter == null) {
+            //nfc not support your device.
+            return;
+        }
+        mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
+                getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // Enable the Foreground Dispatch to detect NFC intent
+        mAdapter.enableForegroundDispatch(this, mPendingIntent, null, null);
 
-        setProgressBarIndeterminateVisibility(true);
+        Intent intent = getIntent();
+        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        nfcStatusMessage.setText(message);
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        if (mAdapter != null) {
+            mAdapter.disableForegroundDispatch(this);
+        }
     }
 
     // Catches the nfc scan event and processes the tag.
     @Override
     protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        nfcStatusMessage.setText("1");
         if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             Parcelable[] rawMessages =
                     intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
             if (rawMessages != null) {
-                NdefMessage[] messages = new NdefMessage[rawMessages.length];
+                NdefMessage[] payLoad = new NdefMessage[rawMessages.length];
                 for (int i = 0; i < rawMessages.length; i++) {
-                    messages[i] = (NdefMessage) rawMessages[i];
+                    payLoad[i] = (NdefMessage) rawMessages[i];
                 }
                 // Process the messages array.
-                processTag(messages);
+                String message = readTag(payLoad);
+                processPayment(message);
             }
         }
     }
 
-    private void processTag(NdefMessage[] msgs){
-        if (msgs == null || msgs.length == 0) return;
-        nfcStatusMessage.setText("2");
+    private void processPayment(String message){
+        if (message == null){
+            nfcStatusMessage.setText(ERROR_FORMAT);
+            return;
+        }
+
+        // TODO Decript the message
+
+
+
+        // TODO Encript the new message
+        // TODO write message
+
+    }
+
+    private String readTag(NdefMessage[] msgs){
+        if (msgs == null || msgs.length == 0) return null;
         String text = "";
         // String tagId = new String(msgs[0].getRecords()[0].getType());
         byte[] payload = msgs[0].getRecords()[0].getPayload();
@@ -92,12 +131,10 @@ public class PaymentActivity extends AppCompatActivity {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        nfcStatusMessage.setText("3");
-        nfcStatusMessage.setText(text);
-        setProgressBarIndeterminateVisibility(false);
+        return text;
     }
 
-    private void write(String text, Tag tag) throws IOException, FormatException {
+    private void writeToTag(String text, Tag tag) throws IOException, FormatException {
         NdefRecord[] records = { createRecord(text) };
         NdefMessage message = new NdefMessage(records);
         // Get an instance of Ndef for the tag.
