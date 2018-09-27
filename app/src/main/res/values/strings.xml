@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Android</string>
+    <string name="app_name">CPS</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -15,4 +15,7 @@
     <string name="amount">R 0.00</string>
     <string name="pay">Pay</string>
     <string name="singed_in_as">none</string>
+    <string name="cancel_payment">Cancel Payment</string>
+    <string name="waiting_for_nfc_tag">Waiting for NFC tag</string>
+    <string name="return_home">Return</string>
 </resources>
