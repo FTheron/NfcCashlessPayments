@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 
 public class PaymentActivity extends AppCompatActivity {
@@ -28,11 +29,13 @@ public class PaymentActivity extends AppCompatActivity {
     public static final String WRITE_SUCCESS = "Text written to the NFC tag successfully!";
     public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
     public static final String READ_WAITING = "Waiting for NFC tag.";
+    public static final String INSUFFICIENT_FUNDS = "Insufficient funds. Transaction Failed.";
 
     ImageView nfcStatusImage;
     TextView nfcStatusMessage;
     NfcAdapter mAdapter;
     PendingIntent mPendingIntent;
+    Double payAmount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +73,8 @@ public class PaymentActivity extends AppCompatActivity {
         // Enable the Foreground Dispatch to detect NFC intent
         mAdapter.enableForegroundDispatch(this, mPendingIntent, null, null);
 
-        Intent intent = getIntent();
-        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-        nfcStatusMessage.setText(message);
+        // Get payment amount
+        payAmount = Double.parseDouble(getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE));
     }
 
     @Override
@@ -106,14 +108,29 @@ public class PaymentActivity extends AppCompatActivity {
             nfcStatusMessage.setText(ERROR_FORMAT);
             return;
         }
+        String newMessage = "";
 
         // TODO Decript the message
 
+        // Extract the needed values from the tag message.
+        String clientId = message.substring(0,32);
+        double balance = Double.parseDouble(message.substring(33, 13));
+
+        balance -= payAmount;
+        if (balance < 0){
+            nfcStatusMessage.setText(INSUFFICIENT_FUNDS);
+            return;
+        }
+
+        // TODO Save the transaction for later upload
+
+        // TODO Change the tag message to reflect the new balance
+        newMessage = clientId + balance;
 
 
-        // TODO Encript the new message
-        // TODO write message
 
+        // TODO Encrypt the new message
+        //writeToTag(newMessage, );
     }
 
     private String readTag(NdefMessage[] msgs){
