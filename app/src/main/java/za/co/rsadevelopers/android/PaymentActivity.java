@@ -12,19 +12,13 @@ import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 
 public class PaymentActivity extends AppCompatActivity {
@@ -42,6 +36,7 @@ public class PaymentActivity extends AppCompatActivity {
     PendingIntent mPendingIntent;
     String payAmount;
     Tag thisTag;
+    Boolean isPaymentProcessed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +44,7 @@ public class PaymentActivity extends AppCompatActivity {
         setContentView(R.layout.activity_payment);
 
         // Add event for paying.
-        Button backButton = (Button) findViewById(R.id.back_button);
+        Button backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,10 +52,10 @@ public class PaymentActivity extends AppCompatActivity {
             }
         });
 
-        nfcStatusImage = (ImageView) findViewById(R.id.nfc_payment_status_image);
+        nfcStatusImage = findViewById(R.id.nfc_payment_status_image);
         nfcStatusImage.setVisibility(View.GONE);
 
-        nfcStatusMessage = (TextView) findViewById(R.id.nfc_status_message);
+        nfcStatusMessage = findViewById(R.id.nfc_status_message);
         nfcStatusMessage.setText(READ_WAITING);
 
         // initialize the NFC adapter and define Pending Intent.
@@ -92,6 +87,7 @@ public class PaymentActivity extends AppCompatActivity {
     // Catches the nfc scan event and processes the tag.
     @Override
     protected void onNewIntent(Intent intent) {
+        if (isPaymentProcessed) return;
         if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
             thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -113,7 +109,7 @@ public class PaymentActivity extends AppCompatActivity {
                 nfcStatusMessage.setText(WRITE_ERROR);
                 e.printStackTrace();
             } catch (FormatException e) {
-                nfcStatusMessage.setText(WRITE_ERROR);
+                nfcStatusMessage.setText(ERROR_FORMAT);
                 e.printStackTrace();
             }
         }
@@ -150,13 +146,14 @@ public class PaymentActivity extends AppCompatActivity {
                 nfcStatusMessage.setText(ERROR_DETECTED);
             } else {
                 writeToTag(newTagMessage);
+                isPaymentProcessed = true;
                 nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(payment), Helper.createCurrency(balance)));
             }
         } catch (IOException e) {
             nfcStatusMessage.setText(WRITE_ERROR);
             e.printStackTrace();
         } catch (FormatException e) {
-            nfcStatusMessage.setText(WRITE_ERROR);
+            nfcStatusMessage.setText(ERROR_FORMAT);
             e.printStackTrace();
         }
     }
@@ -207,9 +204,7 @@ public class PaymentActivity extends AppCompatActivity {
         System.arraycopy(langBytes, 0, payload, 1,              langLength);
         System.arraycopy(textBytes, 0, payload, 1 + langLength, textLength);
 
-        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
-
-        return recordNFC;
+        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
     }
 
     private void completePayment(){
