@@ -25,6 +25,7 @@ public class PaymentActivity extends AppCompatActivity {
     public static final String ERROR_DETECTED = "No NFC tag detected!";
     public static final String ERROR_FORMAT = "Tag type not accepted";
     public static final String WRITE_SUCCESS = "{0} Processed successfully. Balance remaining {1}";
+    public static final String BALANCE_CHECK = "Balance remaining {0}";
     public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
     public static final String READ_WAITING = "Waiting for NFC tag.";
     public static final String EMPTY_TAG = "No funds loaded - Tag is Empty.";
@@ -36,7 +37,7 @@ public class PaymentActivity extends AppCompatActivity {
     PendingIntent mPendingIntent;
     String payAmount;
     Tag thisTag;
-    Boolean isPaymentProcessed;
+    Boolean isPaymentProcessed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +102,7 @@ public class PaymentActivity extends AppCompatActivity {
                 processPayment(message);
             }
         }else {
+            // TODO: Move the loading of a tag to its own activity so that access can be restricted.
             thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             nfcStatusMessage.setText(EMPTY_TAG);
             try {
@@ -128,7 +130,16 @@ public class PaymentActivity extends AppCompatActivity {
         BigDecimal balance = Helper.cleanCurrency(stringBalance);
         BigDecimal payment = Helper.cleanCurrency(payAmount);
 
+        // If the payment value is 0 assume that the client wants to see his balance.
+        if (payment.compareTo(BigDecimal.ZERO) == 0){
+            nfcStatusMessage.setText(MessageFormat.format(BALANCE_CHECK, Helper.createCurrency(balance)));
+            return;
+        }
+
+        // Subtract the payment from the client's balance.
         balance = balance.subtract(payment);
+
+        // If the client has insufficient funds display an appropriate message.
         if (balance.compareTo(BigDecimal.ZERO) < 0){
             nfcStatusMessage.setText(INSUFFICIENT_FUNDS);
             return;

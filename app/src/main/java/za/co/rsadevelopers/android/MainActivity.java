@@ -11,7 +11,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.text.MessageFormat;
+
 public class MainActivity extends AppCompatActivity {
+    public static final String LOGGED_IN_MESSAGE = "Logged in as {0}";
+
     Button payButton;
     EditText priceEditText;
     TextView activityMessage;
@@ -23,11 +27,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Add a listener to make sure that the format of the payment amount is correct.
-        priceEditText = (EditText) findViewById(R.id.price_edit_text);
+        priceEditText = findViewById(R.id.price_edit_text);
         priceEditText.addTextChangedListener(new MoneyTextWatcher(priceEditText));
 
         // Add event for paying.
-        payButton = (Button) findViewById(R.id.pay_button);
+        payButton = findViewById(R.id.pay_button);
         payButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -36,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Get text view for errors.
-        activityMessage = (TextView) findViewById(R.id.activity_message);
+        activityMessage = findViewById(R.id.activity_message);
     }
 
     @Override
@@ -56,16 +60,16 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             // Set username on screen.
-            TextView txtLoggedInAs = (TextView) findViewById(R.id.logged_in_as);
-            txtLoggedInAs.setText("Logged in as " + email);
+            TextView txtLoggedInAs = findViewById(R.id.logged_in_as);
+            txtLoggedInAs.setText(MessageFormat.format(LOGGED_IN_MESSAGE, email));
         }
     }
 
-    public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
+    public static final String EXTRA_MESSAGE = "";
     private void clickPayButton() {
         // TODO Check that the amount is valid.
         Intent intent = new Intent(this, PaymentActivity.class);
-        EditText editText = (EditText) findViewById(R.id.price_edit_text);
+        EditText editText = findViewById(R.id.price_edit_text);
         String amount = editText.getText().toString();
         intent.putExtra(EXTRA_MESSAGE, amount);
         startActivity(intent);
