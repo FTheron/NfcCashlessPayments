@@ -1,7 +1,9 @@
 package za.co.rsadevelopers.android;
 
 import android.app.PendingIntent;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -145,13 +147,15 @@ public class PaymentActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO Save the transaction for later upload
+        // Save the transaction for later upload
+        saveTransactionToDB(clientId, payment);
 
-        // TODO Change the tag message to reflect the new balance
+        // Change the tag message to reflect the new balance
         String newTagMessage = clientId + Helper.getPaddedStringAmount(balance);
 
         // TODO Encrypt the new message
         // Write message to tag
+
         try {
             if(thisTag ==null) {
                 nfcStatusMessage.setText(ERROR_DETECTED);
@@ -229,5 +233,13 @@ public class PaymentActivity extends AppCompatActivity {
     private void disableNFC(){
         NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         nfcAdapter.disableForegroundDispatch(this);
+    }
+
+    private void saveTransactionToDB(String tagId, BigDecimal amount) {
+        SQLiteDatabase database = new SQLiteDBHelper(this).getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_CLIENT_ID, tagId);
+        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_VALUE, Helper.ToCents(amount.negate()));
+        database.insert(SQLiteDBHelper.TRANSACTION_TABLE_NAME, null, values);
     }
 }
