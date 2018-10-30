@@ -23,11 +23,15 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 
+import za.co.rsadevelopers.android.helpers.Helper;
+import za.co.rsadevelopers.android.helpers.SQLiteDBHelper;
+
 public class PaymentActivity extends AppCompatActivity {
     public static final String ERROR_DETECTED = "No NFC tag detected!";
     public static final String ERROR_FORMAT = "Tag type not accepted";
     public static final String WRITE_SUCCESS = "{0} Processed successfully. Balance remaining {1}";
     public static final String BALANCE_CHECK = "Balance remaining {0}";
+    public static final String BALANCE_LOADED = "Balance loaded {0}";
     public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
     public static final String READ_WAITING = "Waiting for NFC tag.";
     public static final String EMPTY_TAG = "No funds loaded - Tag is Empty.";
@@ -37,9 +41,10 @@ public class PaymentActivity extends AppCompatActivity {
     TextView nfcStatusMessage;
     NfcAdapter mAdapter;
     PendingIntent mPendingIntent;
-    String payAmount;
+    String monetaryAmount;
     Tag thisTag;
-    Boolean isPaymentProcessed = false;
+    Boolean isProcessed = false;
+    Boolean isLoad = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +83,8 @@ public class PaymentActivity extends AppCompatActivity {
         enableNFC();
 
         // Get payment amount
-        payAmount = getIntent().getStringExtra(MainActivity.EXTRA_MESSAGE);
+        monetaryAmount = getIntent().getStringExtra(MainActivity.MONETARY_AMOUNT);
+        isLoad = getIntent().getExtras().getBoolean(MainActivity.IS_LOAD);
     }
 
     @Override
@@ -90,31 +96,40 @@ public class PaymentActivity extends AppCompatActivity {
     // Catches the nfc scan event and processes the tag.
     @Override
     protected void onNewIntent(Intent intent) {
-        if (isPaymentProcessed) return;
-        if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
-            Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-            thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            if (rawMessages != null) {
-                NdefMessage[] payLoad = new NdefMessage[rawMessages.length];
-                for (int i = 0; i < rawMessages.length; i++) {
-                    payLoad[i] = (NdefMessage) rawMessages[i];
-                }
-                // Process the messages array.
-                String message = readTag(payLoad);
-                processPayment(message);
-            }
-        }else {
+        if (isProcessed) return;
+        if (isLoad){
             // TODO: Move the loading of a tag to its own activity so that access can be restricted.
             thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            nfcStatusMessage.setText(EMPTY_TAG);
             try {
-                writeToTag("0000000000000000000000000000000-0000000005550");
+                // TODO Get Tag ID
+                BigDecimal loadAmount = Helper.cleanCurrency(monetaryAmount);
+                String tagId = "0000000000000000000000000000000-";
+                writeToTag(tagId + Helper.getPaddedStringAmount(loadAmount));
+                saveTransactionToDB(tagId, loadAmount);
+                nfcStatusMessage.setText(MessageFormat.format(BALANCE_LOADED, Helper.createCurrency(loadAmount)));
             } catch (IOException e) {
                 nfcStatusMessage.setText(WRITE_ERROR);
                 e.printStackTrace();
             } catch (FormatException e) {
                 nfcStatusMessage.setText(ERROR_FORMAT);
                 e.printStackTrace();
+            }
+        }else{
+            // Process payment.
+            if (intent != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+                thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                if (rawMessages != null) {
+                    NdefMessage[] payLoad = new NdefMessage[rawMessages.length];
+                    for (int i = 0; i < rawMessages.length; i++) {
+                        payLoad[i] = (NdefMessage) rawMessages[i];
+                    }
+                    // Process the messages array.
+                    String message = readTag(payLoad);
+                    processPayment(message);
+                }
+            }else {
+                nfcStatusMessage.setText(EMPTY_TAG);
             }
         }
     }
@@ -127,10 +142,10 @@ public class PaymentActivity extends AppCompatActivity {
         // TODO Decrypt the message
 
         // Extract the needed values from the tag message.
-        String clientId = message.substring(0,32);
+        String tagId = message.substring(0,32);
         String stringBalance = message.substring(32, 45);
         BigDecimal balance = Helper.cleanCurrency(stringBalance);
-        BigDecimal payment = Helper.cleanCurrency(payAmount);
+        BigDecimal payment = Helper.cleanCurrency(monetaryAmount);
 
         // If the payment value is 0 assume that the client wants to see his balance.
         if (payment.compareTo(BigDecimal.ZERO) == 0){
@@ -147,11 +162,8 @@ public class PaymentActivity extends AppCompatActivity {
             return;
         }
 
-        // Save the transaction for later upload
-        saveTransactionToDB(clientId, payment);
-
         // Change the tag message to reflect the new balance
-        String newTagMessage = clientId + Helper.getPaddedStringAmount(balance);
+        String newTagMessage = tagId + Helper.getPaddedStringAmount(balance);
 
         // TODO Encrypt the new message
         // Write message to tag
@@ -161,7 +173,8 @@ public class PaymentActivity extends AppCompatActivity {
                 nfcStatusMessage.setText(ERROR_DETECTED);
             } else {
                 writeToTag(newTagMessage);
-                isPaymentProcessed = true;
+                saveTransactionToDB(tagId, payment.negate());
+                isProcessed = true;
                 nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(payment), Helper.createCurrency(balance)));
             }
         } catch (IOException e) {
@@ -239,7 +252,7 @@ public class PaymentActivity extends AppCompatActivity {
         SQLiteDatabase database = new SQLiteDBHelper(this).getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SQLiteDBHelper.TRANSACTION_COLUMN_CLIENT_ID, tagId);
-        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_VALUE, Helper.ToCents(amount.negate()));
+        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_VALUE, Helper.ToCents(amount));
         database.insert(SQLiteDBHelper.TRANSACTION_TABLE_NAME, null, values);
     }
 }

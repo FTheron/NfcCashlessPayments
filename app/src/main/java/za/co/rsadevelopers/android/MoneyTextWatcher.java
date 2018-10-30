@@ -7,8 +7,9 @@ import android.widget.EditText;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.Currency;
 import java.util.Locale;
+
+import za.co.rsadevelopers.android.helpers.Helper;
 
 public class MoneyTextWatcher implements TextWatcher {
     private final WeakReference<EditText> editTextWeakReference;

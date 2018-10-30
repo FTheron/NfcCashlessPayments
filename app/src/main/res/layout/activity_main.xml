@@ -46,6 +46,24 @@
                 android:layout_marginTop="16dp"
                 android:textStyle="bold" />
 
+            <Button
+                android:id="@+id/load"
+                style="?android:textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/load"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/sync"
+                style="?android:textAppearanceSmall"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sync"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/activity_message"
                 android:layout_width="match_parent"

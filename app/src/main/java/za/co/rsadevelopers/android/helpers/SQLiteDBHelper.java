@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.helpers;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -6,13 +6,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class SQLiteDBHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 2;
-    static final String DATABASE_NAME = "CashlessPayments";
-    static final String TRANSACTION_TABLE_NAME = "Transactions";
-    static final String TRANSACTION_COLUMN_ID = "TransactionId";
-    static final String TRANSACTION_COLUMN_CLIENT_ID = "ClientId";
-    static final String TRANSACTION_COLUMN_VALUE = "TransactionValue";
-    static final String TRANSACTION_COLUMN_DATETIME = "TransactionDateTime";
-    static final String TRANSACTION_COLUMN_UPLOADED = "Uploaded";
+    public static final String DATABASE_NAME = "CashlessPayments";
+    public static final String TRANSACTION_TABLE_NAME = "Transactions";
+    public static final String TRANSACTION_COLUMN_ID = "TransactionId";
+    public static final String TRANSACTION_COLUMN_CLIENT_ID = "ClientId";
+    public static final String TRANSACTION_COLUMN_VALUE = "TransactionValue";
+    public static final String TRANSACTION_COLUMN_DATETIME = "TransactionDateTime";
+    public static final String TRANSACTION_COLUMN_UPLOADED = "Uploaded";
 
     public SQLiteDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
