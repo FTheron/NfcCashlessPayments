@@ -7,8 +7,9 @@ import android.widget.EditText;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.Currency;
 import java.util.Locale;
+
+import za.co.rsadevelopers.android.helpers.Helper;
 
 public class MoneyTextWatcher implements TextWatcher {
     private final WeakReference<EditText> editTextWeakReference;
@@ -32,11 +33,11 @@ public class MoneyTextWatcher implements TextWatcher {
         String s = editable.toString();
         if (s.isEmpty()) return;
         editText.removeTextChangedListener(this);
-        String cleanString = s.replaceAll("[R,.]", "");
-        BigDecimal parsed = new BigDecimal(cleanString).setScale(2, BigDecimal.ROUND_FLOOR).divide(new BigDecimal(100), BigDecimal.ROUND_FLOOR);
+        BigDecimal parsed = Helper.cleanCurrency(s);
         Locale locale = new Locale("en","ZA");
         String formatted = NumberFormat.getCurrencyInstance(locale).format(parsed);
         editText.setText(formatted);
         editText.setSelection(formatted.length());
         editText.addTextChangedListener(this);
-    }}
+    }
+}

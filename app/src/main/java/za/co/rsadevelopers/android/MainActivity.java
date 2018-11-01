@@ -11,11 +11,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.text.MessageFormat;
+
 public class MainActivity extends AppCompatActivity {
-    Button payButton;
-    EditText priceEditText;
-    TextView activityMessage;
-    SharedPreferences sharedPreferences;
+    public static final String LOGGED_IN_MESSAGE = "Logged in as {0}";
+    public static final String MONETARY_AMOUNT = "za.co.rsadevelopers.android.MONETARY_AMOUNT";
+    public static final String IS_LOAD = "za.co.rsadevelopers.android.IS_LOAD";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,11 +24,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Add a listener to make sure that the format of the payment amount is correct.
-        priceEditText = (EditText) findViewById(R.id.price_edit_text);
+        EditText priceEditText = findViewById(R.id.price_edit_text);
         priceEditText.addTextChangedListener(new MoneyTextWatcher(priceEditText));
 
         // Add event for paying.
-        payButton = (Button) findViewById(R.id.pay_button);
+        Button payButton = findViewById(R.id.pay_button);
         payButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -35,8 +36,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Get text view for errors.
-        activityMessage = (TextView) findViewById(R.id.activity_message);
+        Button loadButton = findViewById(R.id.load);
+        payButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clickPayButton();
+            }
+        });
+
+        Button syncButton = findViewById(R.id.sync);
+        payButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clickPayButton();
+            }
+        });
     }
 
     @Override
@@ -47,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkLogin() {
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Long user_id = sharedPreferences.getLong("User_Id", 0);
         String email = sharedPreferences.getString("User_Email", "none");
         if (user_id == 0) {
@@ -56,18 +70,33 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             // Set username on screen.
-            TextView txtLoggedInAs = (TextView) findViewById(R.id.logged_in_as);
-            txtLoggedInAs.setText("Logged in as " + email);
+            TextView txtLoggedInAs = findViewById(R.id.logged_in_as);
+            txtLoggedInAs.setText(MessageFormat.format(LOGGED_IN_MESSAGE, email));
         }
     }
 
-    public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
+
     private void clickPayButton() {
         // TODO Check that the amount is valid.
         Intent intent = new Intent(this, PaymentActivity.class);
-        EditText editText = (EditText) findViewById(R.id.price_edit_text);
+        EditText editText = findViewById(R.id.price_edit_text);
         String amount = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, amount);
+        intent.putExtra(MONETARY_AMOUNT, amount);
+        intent.putExtra(IS_LOAD, false);
         startActivity(intent);
+    }
+
+    private void clickLoadButton() {
+        // TODO Check that the amount is valid.
+        Intent intent = new Intent(this, PaymentActivity.class);
+        EditText editText = findViewById(R.id.price_edit_text);
+        String amount = editText.getText().toString();
+        intent.putExtra(MONETARY_AMOUNT, amount);
+        intent.putExtra(IS_LOAD, true);
+        startActivity(intent);
+    }
+
+    private void clickSyncButton() {
+        // TODO Read Database
     }
 }

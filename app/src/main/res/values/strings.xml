@@ -18,4 +18,6 @@
     <string name="cancel_payment">Cancel Payment</string>
     <string name="waiting_for_nfc_tag">Waiting for NFC tag</string>
     <string name="return_home">Return</string>
+    <string name="sync">sync</string>
+    <string name="load">load</string>
 </resources>

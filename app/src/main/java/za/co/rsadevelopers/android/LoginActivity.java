@@ -305,7 +305,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
-
+            //http://cashlesspaymentsapi.azurewebsites.net/
             long userId = 1;
 
             try {
