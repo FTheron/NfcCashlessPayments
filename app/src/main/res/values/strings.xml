@@ -20,4 +20,5 @@
     <string name="return_home">Return</string>
     <string name="sync">sync</string>
     <string name="load">load</string>
+    <string name="transaction_result_image">transaction result image</string>
 </resources>

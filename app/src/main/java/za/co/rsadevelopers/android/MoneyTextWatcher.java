@@ -15,7 +15,7 @@ public class MoneyTextWatcher implements TextWatcher {
     private final WeakReference<EditText> editTextWeakReference;
 
     public MoneyTextWatcher(EditText editText) {
-        editTextWeakReference = new WeakReference<EditText>(editText);
+        editTextWeakReference = new WeakReference<>(editText);
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.util.Objects;
 
 import za.co.rsadevelopers.android.helpers.Helper;
 import za.co.rsadevelopers.android.helpers.SQLiteDBHelper;
@@ -36,6 +37,7 @@ public class PaymentActivity extends AppCompatActivity {
     public static final String READ_WAITING = "Waiting for NFC tag.";
     public static final String EMPTY_TAG = "No funds loaded - Tag is Empty.";
     public static final String INSUFFICIENT_FUNDS = "Insufficient funds. Transaction Failed.";
+    public static final String NFC_NOT_SUPPORTED = "NFC is not supported by this device.";
 
     ImageView nfcStatusImage;
     TextView nfcStatusMessage;
@@ -56,7 +58,7 @@ public class PaymentActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                completePayment();
+                finish();
             }
         });
 
@@ -66,12 +68,6 @@ public class PaymentActivity extends AppCompatActivity {
         nfcStatusMessage = findViewById(R.id.nfc_status_message);
         nfcStatusMessage.setText(READ_WAITING);
 
-        // initialize the NFC adapter and define Pending Intent.
-        mAdapter = NfcAdapter.getDefaultAdapter(this);
-        if (mAdapter == null) {
-            //nfc not support your device.
-            return;
-        }
         mPendingIntent = PendingIntent.getActivity(
                 this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
     }
@@ -84,7 +80,7 @@ public class PaymentActivity extends AppCompatActivity {
 
         // Get payment amount
         monetaryAmount = getIntent().getStringExtra(MainActivity.MONETARY_AMOUNT);
-        isLoad = getIntent().getExtras().getBoolean(MainActivity.IS_LOAD);
+        isLoad = Objects.requireNonNull(getIntent().getExtras()).getBoolean(MainActivity.IS_LOAD);
     }
 
     @Override
@@ -235,17 +231,20 @@ public class PaymentActivity extends AppCompatActivity {
         return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
     }
 
-    private void completePayment(){
-        finish();
-    }
-
     private void enableNFC(){
-        mAdapter.enableForegroundDispatch(this, mPendingIntent, null, null);
+        mAdapter = NfcAdapter.getDefaultAdapter(this);
+        if(mAdapter==null)
+        {
+            nfcStatusMessage.setText(NFC_NOT_SUPPORTED);
+        }else{
+            mAdapter.enableForegroundDispatch(this, mPendingIntent, null, null);
+        }
     }
 
     private void disableNFC(){
-        NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        nfcAdapter.disableForegroundDispatch(this);
+        if (mAdapter!=null){
+            mAdapter.disableForegroundDispatch(this);
+        }
     }
 
     private void saveTransactionToDB(String tagId, BigDecimal amount) {
