@@ -94,6 +94,7 @@ public class PaymentActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         if (isProcessed) return;
         if (isLoad){
+            // Only do this if the tag is empty.
             // TODO: Move the loading of a tag to its own activity so that access can be restricted.
             thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             try {
@@ -101,7 +102,7 @@ public class PaymentActivity extends AppCompatActivity {
                 BigDecimal loadAmount = Helper.cleanCurrency(monetaryAmount);
                 String tagId = "0000000000000000000000000000000-";
                 writeToTag(tagId + Helper.getPaddedStringAmount(loadAmount));
-                saveTransactionToDB(tagId, loadAmount);
+                // TODO: saveTransactionToDB(tagId, loadAmount);
                 nfcStatusMessage.setText(MessageFormat.format(BALANCE_LOADED, Helper.createCurrency(loadAmount)));
             } catch (IOException e) {
                 nfcStatusMessage.setText(WRITE_ERROR);
@@ -131,47 +132,27 @@ public class PaymentActivity extends AppCompatActivity {
     }
 
     private void processPayment(String message){
-        if (message == null || message.length() != 45){
-            nfcStatusMessage.setText(ERROR_FORMAT);
-            return;
-        }
         // TODO Decrypt the message
 
-        // Extract the needed values from the tag message.
-        String tagId = message.substring(0,32);
-        String stringBalance = message.substring(32, 45);
-        BigDecimal balance = Helper.cleanCurrency(stringBalance);
-        BigDecimal payment = Helper.cleanCurrency(monetaryAmount);
+        if (!TagIsValid(message)) return;
 
-        // If the payment value is 0 assume that the client wants to see his balance.
-        if (payment.compareTo(BigDecimal.ZERO) == 0){
-            nfcStatusMessage.setText(MessageFormat.format(BALANCE_CHECK, Helper.createCurrency(balance)));
-            return;
-        }
+        TagData tagData = ExtractTagData(message);
 
-        // Subtract the payment from the client's balance.
-        balance = balance.subtract(payment);
+        BigDecimal transactionAmount = Helper.cleanCurrency(monetaryAmount);
+        if (!ExecuteTransaction(tagData, transactionAmount))  return;
 
-        // If the client has insufficient funds display an appropriate message.
-        if (balance.compareTo(BigDecimal.ZERO) < 0){
-            nfcStatusMessage.setText(INSUFFICIENT_FUNDS);
-            return;
-        }
-
-        // Change the tag message to reflect the new balance
-        String newTagMessage = tagId + Helper.getPaddedStringAmount(balance);
+        String newTagMessage = CreateNewTag(tagData);
 
         // TODO Encrypt the new message
-        // Write message to tag
 
         try {
             if(thisTag ==null) {
                 nfcStatusMessage.setText(ERROR_DETECTED);
             } else {
                 writeToTag(newTagMessage);
-                saveTransactionToDB(tagId, payment.negate());
+                saveTransactionToDB(tagData);
                 isProcessed = true;
-                nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(payment), Helper.createCurrency(balance)));
+                nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(transactionAmount), Helper.createCurrency(tagData.Balance)));
             }
         } catch (IOException e) {
             nfcStatusMessage.setText(WRITE_ERROR);
@@ -180,6 +161,48 @@ public class PaymentActivity extends AppCompatActivity {
             nfcStatusMessage.setText(ERROR_FORMAT);
             e.printStackTrace();
         }
+    }
+
+    private boolean TagIsValid(String message){
+        if (message == null || message.length() != 45){
+            nfcStatusMessage.setText(ERROR_FORMAT);
+        }
+        return true;
+    }
+
+    // Extract the needed values from the tag message.
+    private TagData ExtractTagData(String tagMessage){
+
+        TagData data = new TagData();
+        data.ClientId = tagMessage.substring(0,32);
+        String stringBalance = tagMessage.substring(32, 45);
+        data.Balance = Helper.cleanCurrency(stringBalance);
+        if (!isLoad) data.Balance.negate();
+
+        return data;
+    }
+
+    private boolean ExecuteTransaction(TagData tag, BigDecimal transactionAmount){
+
+        // If the payment value is 0 assume that the client wants to see his balance.
+        if (transactionAmount.compareTo(BigDecimal.ZERO) == 0){
+            nfcStatusMessage.setText(MessageFormat.format(BALANCE_CHECK, Helper.createCurrency(tag.Balance)));
+            return false;
+        }
+
+        // Add/Subtract the payment from the client's balance.
+        tag.Balance = tag.Balance.add(transactionAmount);
+
+        // If the client has insufficient funds display an appropriate message.
+        if (tag.Balance.compareTo(BigDecimal.ZERO) < 0){
+            nfcStatusMessage.setText(INSUFFICIENT_FUNDS);
+            return false;
+        }
+        return true;
+    }
+
+    private String CreateNewTag(TagData tag){
+        return tag.ClientId + Helper.getPaddedStringAmount(tag.Balance);
     }
 
     private String readTag(NdefMessage[] msgs){
@@ -247,11 +270,11 @@ public class PaymentActivity extends AppCompatActivity {
         }
     }
 
-    private void saveTransactionToDB(String tagId, BigDecimal amount) {
+    private void saveTransactionToDB(TagData tag) {
         SQLiteDatabase database = new SQLiteDBHelper(this).getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_CLIENT_ID, tagId);
-        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_VALUE, Helper.ToCents(amount));
+        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_CLIENT_ID, tag.ClientId);
+        values.put(SQLiteDBHelper.TRANSACTION_COLUMN_VALUE, Helper.ToCents(tag.Balance));
         database.insert(SQLiteDBHelper.TRANSACTION_TABLE_NAME, null, values);
     }
 }
