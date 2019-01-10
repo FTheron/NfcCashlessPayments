@@ -6,7 +6,9 @@ import java.util.Locale;
 
 public class Helper {
     public static BigDecimal cleanCurrency(String amount){
-        String cleanString = amount.replaceAll("[R,.]", "");
+        if (amount.isEmpty()) return new BigDecimal(0);
+
+        String cleanString = amount.replaceAll("[R,. ]", "");
         return new BigDecimal(cleanString).setScale(2, BigDecimal.ROUND_FLOOR).divide(new BigDecimal(100), BigDecimal.ROUND_FLOOR);
     }
 

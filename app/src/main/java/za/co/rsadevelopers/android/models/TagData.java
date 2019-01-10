@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.models;
 
 import java.math.BigDecimal;
 
