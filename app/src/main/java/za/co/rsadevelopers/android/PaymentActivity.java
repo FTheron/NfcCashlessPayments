@@ -109,30 +109,27 @@ public class PaymentActivity extends AppCompatActivity {
                 processPayment(message);
             }
         } else {
-            if (isLoad){
+            if (isLoad) {
                 // Only do this if the tag is empty.
                 thisTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
                 loadNewTag();
-            }else {
+            } else {
                 nfcStatusMessage.setText(EMPTY_TAG);
             }
         }
     }
 
-    private void loadNewTag(){
-        try {
-            // TODO Get Tag ID
-            BigDecimal loadAmount = Helper.cleanCurrency(monetaryAmount);
-            String tagId = "0000000000000000000000000000000-";
-            writeToTag(tagId + Helper.getPaddedStringAmount(loadAmount));
-            // TODO: saveTransactionToDB(tagId, loadAmount);
+    private void loadNewTag() {
+        BigDecimal loadAmount = Helper.cleanCurrency(monetaryAmount);
+        // TODO Get Tag ID
+        String tagId = "0000000000000000000000000000000-";
+
+        TagData tagData = new TagData(tagId, loadAmount);
+
+        if (writeToTag(tagData.ToMessage())) {
+            saveTransactionToDB(tagData);
+            isProcessed = true;
             nfcStatusMessage.setText(MessageFormat.format(BALANCE_LOADED, Helper.createCurrency(loadAmount), Helper.createCurrency(loadAmount)));
-        } catch (IOException e) {
-            nfcStatusMessage.setText(WRITE_ERROR);
-            e.printStackTrace();
-        } catch (FormatException e) {
-            nfcStatusMessage.setText(ERROR_FORMAT);
-            e.printStackTrace();
         }
     }
 
@@ -146,28 +143,15 @@ public class PaymentActivity extends AppCompatActivity {
         BigDecimal transactionAmount = Helper.cleanCurrency(monetaryAmount);
         if (!executeTransaction(tagData, transactionAmount)) return;
 
-        String newTagMessage = createNewTag(tagData);
+        String newTagMessage = tagData.ToMessage();
 
         // TODO Encrypt the new message
 
-        try {
-            if (thisTag == null) {
-                nfcStatusMessage.setText(ERROR_DETECTED);
-            } else {
-                writeToTag(newTagMessage);
-                saveTransactionToDB(tagData);
-                isProcessed = true;
-                if (isLoad)
-                    nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(transactionAmount), Helper.createCurrency(tagData.Balance)));
-                else
-                    nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(transactionAmount), Helper.createCurrency(tagData.Balance)));
-            }
-        } catch (IOException e) {
-            nfcStatusMessage.setText(WRITE_ERROR);
-            e.printStackTrace();
-        } catch (FormatException e) {
-            nfcStatusMessage.setText(ERROR_FORMAT);
-            e.printStackTrace();
+        if (writeToTag(newTagMessage)) {
+            // Successfully wrote to tag.
+            saveTransactionToDB(tagData);
+            isProcessed = true;
+            nfcStatusMessage.setText(MessageFormat.format(WRITE_SUCCESS, Helper.createCurrency(transactionAmount), Helper.createCurrency(tagData.Balance)));
         }
     }
 
@@ -208,10 +192,6 @@ public class PaymentActivity extends AppCompatActivity {
         return true;
     }
 
-    private String createNewTag(TagData tag) {
-        return tag.ClientId + Helper.getPaddedStringAmount(tag.Balance);
-    }
-
     private String readTag(NdefMessage[] msgs) {
         if (msgs == null || msgs.length == 0) return null;
         String text = "";
@@ -230,17 +210,31 @@ public class PaymentActivity extends AppCompatActivity {
         return text;
     }
 
-    private void writeToTag(String text) throws IOException, FormatException {
-        NdefRecord[] records = {createRecord(text)};
-        NdefMessage message = new NdefMessage(records);
-        // Get an instance of Ndef for the tag.
-        Ndef ndef = Ndef.get(thisTag);
-        // Enable I/O
-        ndef.connect();
-        // Write the message
-        ndef.writeNdefMessage(message);
-        // Close the connection
-        ndef.close();
+    private boolean writeToTag(String text) {
+        try {
+            if (thisTag == null) {
+                nfcStatusMessage.setText(ERROR_DETECTED);
+            } else {
+                NdefRecord[] records = {createRecord(text)};
+                NdefMessage message = new NdefMessage(records);
+                // Get an instance of Ndef for the tag.
+                Ndef ndef = Ndef.get(thisTag);
+                // Enable I/O
+                ndef.connect();
+                // Write the message
+                ndef.writeNdefMessage(message);
+                // Close the connection
+                ndef.close();
+                return true;
+            }
+        } catch (IOException e) {
+            nfcStatusMessage.setText(WRITE_ERROR);
+            e.printStackTrace();
+        } catch (FormatException e) {
+            nfcStatusMessage.setText(ERROR_FORMAT);
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private NdefRecord createRecord(String text) throws UnsupportedEncodingException {
