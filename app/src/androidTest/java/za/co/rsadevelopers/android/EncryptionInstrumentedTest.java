@@ -7,6 +7,8 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import za.co.rsadevelopers.android.helpers.Encryption;
+
 import static org.junit.Assert.*;
 
 /**
@@ -15,12 +17,16 @@ import static org.junit.Assert.*;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
+public class EncryptionInstrumentedTest {
     @Test
-    public void useAppContext() {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
+    public void encryption_isCorrect() {
 
-        assertEquals("za.co.rsadevelopers.android", appContext.getPackageName());
+        Encryption encryption = new Encryption();
+        String text = "Encrypt this.";
+
+        String cipherText = encryption.encrypt(text);
+        assertNotEquals(text, cipherText);
+        String clearText = encryption.decrypt(cipherText);
+        assertEquals(clearText, text);
     }
 }

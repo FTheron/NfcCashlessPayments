@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.text.MessageFormat;
+
+import za.co.rsadevelopers.android.components.MoneyTextWatcher;
+import za.co.rsadevelopers.android.R;
 
 public class MainActivity extends AppCompatActivity {
     public static final String LOGGED_IN_MESSAGE = "Logged in as {0}";
@@ -104,5 +107,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void clickSyncButton() {
         // TODO Read Database
+        // TODO Send data to the service
     }
 }

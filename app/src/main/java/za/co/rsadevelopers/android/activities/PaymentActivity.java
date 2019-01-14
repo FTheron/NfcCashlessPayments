@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.activities;
 
 import android.app.PendingIntent;
 import android.content.ContentValues;
@@ -24,6 +24,8 @@ import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Objects;
 
+import za.co.rsadevelopers.android.R;
+import za.co.rsadevelopers.android.helpers.Encryption;
 import za.co.rsadevelopers.android.helpers.Helper;
 import za.co.rsadevelopers.android.helpers.SQLiteDBHelper;
 import za.co.rsadevelopers.android.models.TagData;
@@ -48,11 +50,15 @@ public class PaymentActivity extends AppCompatActivity {
     Tag thisTag;
     Boolean isProcessed = false;
     Boolean isLoad = false;
+    Encryption encryption;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
+
+        // Create the encryption object
+        encryption = new Encryption();
 
         // Add event for paying.
         Button backButton = findViewById(R.id.back_button);
@@ -106,7 +112,7 @@ public class PaymentActivity extends AppCompatActivity {
                 }
                 // Process the messages array.
                 String message = readTag(payLoad);
-                processPayment(message);
+                processTransaction(message);
             }
         } else {
             if (isLoad) {
@@ -133,9 +139,7 @@ public class PaymentActivity extends AppCompatActivity {
         }
     }
 
-    private void processPayment(String message) {
-        // TODO Decrypt the message
-
+    private void processTransaction(String message) {
         if (!tagIsValid(message)) return;
 
         TagData tagData = extractTagData(message);
@@ -144,8 +148,6 @@ public class PaymentActivity extends AppCompatActivity {
         if (!executeTransaction(tagData, transactionAmount)) return;
 
         String newTagMessage = tagData.ToMessage();
-
-        // TODO Encrypt the new message
 
         if (writeToTag(newTagMessage)) {
             // Successfully wrote to tag.
@@ -207,7 +209,7 @@ public class PaymentActivity extends AppCompatActivity {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return text;
+        return encryption.decrypt(text);
     }
 
     private boolean writeToTag(String text) {
@@ -215,7 +217,7 @@ public class PaymentActivity extends AppCompatActivity {
             if (thisTag == null) {
                 nfcStatusMessage.setText(ERROR_DETECTED);
             } else {
-                NdefRecord[] records = {createRecord(text)};
+                NdefRecord[] records = {createRecord(encryption.encrypt(text))};
                 NdefMessage message = new NdefMessage(records);
                 // Get an instance of Ndef for the tag.
                 Ndef ndef = Ndef.get(thisTag);

@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.components;
 
 import android.text.Editable;
 import android.text.TextWatcher;

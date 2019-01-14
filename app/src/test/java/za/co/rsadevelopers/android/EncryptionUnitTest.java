@@ -14,14 +14,5 @@ import static org.junit.Assert.*;
 public class EncryptionUnitTest {
     @Test
     public void encryption_isCorrect() {
-
-        Encryption encryption = new Encryption();
-        String text = "Encrypt this.";
-
-        String cipherText = encryption.encrypt(text);
-        assertNotEquals(text, cipherText);
-        String clearText = encryption.decrypt(cipherText);
-        assertEquals(clearText, text);
-
     }
 }

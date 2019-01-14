@@ -3,11 +3,9 @@ package za.co.rsadevelopers.android.helpers;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.binary.Base64;
+import android.util.Base64;
 
 public class Encryption {
-    // TODO: new keys.
-    // Vector should be random
     String key = "Bar12345Bar12345"; // 128 bit key
     String initVector = "RandomInitVector"; // 16 bytes IV
 
@@ -25,7 +23,10 @@ public class Encryption {
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
 
             byte[] encrypted = cipher.doFinal(value.getBytes());
-            return Base64.encodeBase64String(encrypted);
+
+            System.out.println("encrypted string:" + Base64.encodeToString(encrypted, Base64.DEFAULT));
+
+            return Base64.encodeToString(encrypted, Base64.DEFAULT);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -41,7 +42,7 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
 
-            byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
+            byte[] original = cipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
 
             return new String(original);
         } catch (Exception ex) {

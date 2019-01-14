@@ -1,4 +1,4 @@
-package za.co.rsadevelopers.android;
+package za.co.rsadevelopers.android.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -33,6 +33,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import za.co.rsadevelopers.android.R;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
