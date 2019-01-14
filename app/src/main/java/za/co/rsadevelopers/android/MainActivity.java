@@ -37,18 +37,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button loadButton = findViewById(R.id.load);
-        payButton.setOnClickListener(new OnClickListener() {
+        loadButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickPayButton();
+                clickLoadButton();
             }
         });
 
         Button syncButton = findViewById(R.id.sync);
-        payButton.setOnClickListener(new OnClickListener() {
+        syncButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickPayButton();
+                clickSyncButton();
             }
         });
     }
@@ -58,6 +58,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         checkLogin();
+        resetScreen();
+    }
+
+    private void resetScreen(){
+        EditText priceEditText = findViewById(R.id.price_edit_text);
+        priceEditText.setText("");
     }
 
     private void checkLogin() {
